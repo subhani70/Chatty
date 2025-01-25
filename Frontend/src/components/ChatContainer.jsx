@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useChatStore } from "../store/useChatStore";
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
@@ -7,29 +7,42 @@ import { useAuthStore } from "../store/useAuthStore";
 import { formatMessageTime } from "../lib/utils";
 
 const ChatContainer = () => {
-    const { messages, getMessages, isMessagesLoading, selectedUser } = useChatStore();
-    const {authUser}=useAuthStore();
+  const { messages, getMessages, isMessagesLoading, selectedUser, subscribeToMessages, unSubscribeFromMessages } = useChatStore();
+  const { authUser } = useAuthStore();
+  const messageEndRef = useRef(null);
 
-    useEffect(()=>{
-        getMessages(selectedUser._id)
-    },[selectedUser._id,getMessages])
+  useEffect(() => {
+    getMessages(selectedUser._id);
 
-    if (isMessagesLoading) {
-        return (
-            <div className="flex-1 flex flex-col overflow-auto">
-                <ChatHeader/>
-                <MessageSkeleton/>
-                <MessageInput/>
-            </div>)
+    subscribeToMessages();
+
+    return () => unSubscribeFromMessages();
+  }, [selectedUser._id, getMessages, subscribeToMessages, unSubscribeFromMessages])
+
+  useEffect(() => {
+    if (messageEndRef.current && messages){
+      messageEndRef.current.scrollIntoView({ behaviour: "smooth" });
     }
+  }, [messages])
+ 
+  if (isMessagesLoading) {
     return (
-        <div className="flex-1 flex flex-col overflow-auto">
-           <ChatHeader/>
-           <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 flex flex-col overflow-auto">
+        <ChatHeader />
+        <MessageSkeleton />
+        <MessageInput />
+      </div>)
+  }
+
+  return (
+    <div className="flex-1 flex flex-col overflow-auto">
+      <ChatHeader />
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message._id}
             className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
+            ref={messageEndRef}
           >
             <div className=" chat-image avatar">
               <div className="size-10 rounded-full border">
@@ -61,8 +74,8 @@ const ChatContainer = () => {
           </div>
         ))}
       </div>
-           <MessageInput/>
-        </div>
-    )
+      <MessageInput />
+    </div>
+  )
 }
-export default ChatContainer
+export default ChatContainer;
