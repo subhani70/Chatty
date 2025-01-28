@@ -36,7 +36,7 @@ Chatty is a real-time chat application that enables seamless communication with 
 
 4. Install frontend dependencies:  
    ```bash  
-   cd ../frontend  
+   cd frontend  
    npm install  
    ```  
 
